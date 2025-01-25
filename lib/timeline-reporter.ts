@@ -19,6 +19,7 @@ export interface ReporterOptions {
   images?: Images;
   screenshotStrategy?: string;
   stdout?: boolean;
+  [p: string]: unknown;
 }
 
 interface TestSuite {
@@ -33,7 +34,7 @@ interface TestSuite {
 class TimelineReporter extends WDIOReporter {
   [x: string]: any;
   reporterOptions: ReporterOptions;
-  suites: any;
+  //suites: any; todo
 
   constructor(options?: ReporterOptions) {
     if (!options) {
@@ -56,7 +57,7 @@ class TimelineReporter extends WDIOReporter {
         screenshotStrategy: 'none'
       },
       options
-    );
+    ) as ReporterOptions;
     super(options);
     this.reporterOptions = mergedOptions;
     this.registerListeners();
@@ -105,8 +106,10 @@ class TimelineReporter extends WDIOReporter {
         let testSuite: TestSuite = {
           title: suite.title,
           duration: suite._duration,
-          start: suite.start,
-          end: suite.end,
+          //start: suite.start, todo
+          start: suite.start.toDateString(),
+          //end: suite.end, todo
+          end: suite.end.toDateString(),
           tests: MapTests(suite.tests),
           hooks: MapHooks(suite.hooks)
         };

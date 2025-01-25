@@ -1,8 +1,6 @@
 import { formatDateString } from '../lib/utils';
-import chai from 'chai';
 import { parseISO, format } from 'date-fns';
-
-const expect = chai.expect;
+import { expect } from 'chai';
 
 describe('formatDateString', () => {
   it('Should return formatted date', () => {

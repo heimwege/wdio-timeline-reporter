@@ -36,17 +36,17 @@ export class TimelineService {
   public watcher: FSWatcher;
 
   setReporterOptions(config: WdioConfiguration) {
-    const timelineFilter = config.reporters.filter(
+    const timeline = config.reporters.find(
       item => Array.isArray(item) && item[0] === 'timeline'
+      //item => Array.isArray(item) && typeof item[0] !== 'string' todo
     );
-    if (timelineFilter.length === 0) {
+    if (!timeline) {
       throw new Error(
         `Add timeline to reporters in wdio config: 
             reporters: [[timeline]]
         `
       );
     }
-    const timeline = timelineFilter[0];
     if (timeline.length !== 2 || typeof timeline[1] !== 'object') {
       throw new Error(
         `Add reporter options object to timeline reporter: 
@@ -107,12 +107,14 @@ export class TimelineService {
     }
   }
 
-  afterTest(test) {
+  //afterTest(test) { todo
+  afterTest(test, context, { error, result, duration, passed, retries }) {
     const { screenshotStrategy } = this.reporterOptions;
     if (screenshotStrategy === BEFORE_CLICK) {
       browser.takeScreenshot();
     }
-    if (screenshotStrategy === ON_ERROR && !test.passed) {
+    //if (screenshotStrategy === ON_ERROR && !test.passed) { todo
+    if (screenshotStrategy === ON_ERROR && !passed) {
       browser.takeScreenshot();
     }
   }
@@ -189,7 +191,7 @@ export class TimelineService {
           const finalHtml = indexHtml(body);
           resolve(finalHtml);
         })
-          .then(finalHtml =>
+          .then((finalHtml: string) =>
             writeFilePromiseSync(this.getFileName(), finalHtml)
           )
           .then(() => {

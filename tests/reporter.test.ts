@@ -1,7 +1,5 @@
-import chai from 'chai';
+import { expect } from 'chai';
 import TimelineReporter from '../lib/timeline-reporter';
-
-const expect = chai.expect;
 
 describe('Create instance', function() {
   it('should throw Error if options is undefined', function() {

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 import { parseISO, format } from 'date-fns';
 
 const retry = (promise, args, maxRetries = 3, interval = 500) =>
@@ -40,9 +40,13 @@ const resizeImage = (
   return Jimp.read(filePath)
     .then(file => {
       return file
-        .resize(Math.round(file.getWidth() / reductionRatio), Jimp.AUTO)
-        .quality(quality)
-        .writeAsync(filePath);
+        .resize({
+          w: Math.round(file.width / reductionRatio),
+          h: Math.round(file.height / reductionRatio)
+        })
+        //.quality(quality) todo
+        //.writeAsync(filePath);
+        .write(`${filePath.split('.').splice(-1).concat('.')}.${filePath.split('.')[filePath.split('.').length - 1]}`);
     })
     .catch(err => {
       throw err;

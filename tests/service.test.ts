@@ -1,9 +1,8 @@
-import chai from 'chai';
+import { expect } from 'chai';
 import { TimelineService } from '../lib/timeline-service';
+import { join } from 'path';
 
-const expect = chai.expect;
-
-describe('Create instance', function() {
+describe('Create instance (service)', function() {
   it('should throw timeline not set as a reporter', function() {
     const service = new TimelineService();
     const config = {
@@ -45,7 +44,7 @@ describe('Create instance', function() {
     expect(() => service.setReporterOptions(config)).to.not.throw();
     expect(service.reporterOptions).deep.equals({ outputDir: 'someDirectory' });
     expect(service.resolvedOutputDir).deep.equals(
-      `${process.cwd()}/someDirectory`
+      join(process.cwd(), 'someDirectory')
     );
   });
 });
