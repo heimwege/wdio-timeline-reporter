@@ -1,10 +1,9 @@
-import WDIOReporter from '@wdio/reporter';
+import WDIOReporter, { AfterCommandArgs, TestStats } from '@wdio/reporter';
 import { MapHooks } from './mapHooks';
 import { MapTests } from './mapTests';
 import { initResultSet, ResultSet } from './initResultSet';
 import { createWriteStream } from 'fs';
 import { resolve } from 'path';
-import { deepMerge } from './utils';
 
 interface Images {
   quality?: number;
@@ -31,10 +30,24 @@ interface TestSuite {
   hooks: any;
 }
 
-class TimelineReporter extends WDIOReporter {
-  [x: string]: any;
+type Result = {
+  value: string;
+}
+
+const DEFAULT_OPTIONS = {
+  fileName: 'timeline-report.html',
+  embedImages: false,
+  images: {
+    quality: 80,
+    resize: false,
+    reductionRatio: 2
+  },
+  screenshotStrategy: 'none'
+}
+
+export default class TimelineReporter extends WDIOReporter {
+  test: TestStats & { screenshots?: string[]; context?: any[] };
   reporterOptions: ReporterOptions;
-  //suites: any; todo
 
   constructor(options?: ReporterOptions) {
     if (!options) {
@@ -44,36 +57,26 @@ class TimelineReporter extends WDIOReporter {
     if (!options.outputDir) {
       throw new Error('Set outputDir on reporter options object');
     }
-    const mergedOptions = deepMerge(
-      // default
-      {
-        fileName: 'timeline-report.html',
-        embedImages: false,
-        images: {
-          quality: 80,
-          resize: false,
-          reductionRatio: 2
-        },
-        screenshotStrategy: 'none'
-      },
-      options
-    ) as ReporterOptions;
+    const mergedOptions = {...DEFAULT_OPTIONS, ...options};
     super(options);
     this.reporterOptions = mergedOptions;
     this.registerListeners();
   }
 
-  onTestStart(test) {
+  onTestStart(test: TestStats) {
     this.test = test;
     this.test.screenshots = [];
   }
 
-  onAfterCommand(command) {
+  hasResultValue(result: any): result is Result {
+    return "value" in result;
+  }
+
+  onAfterCommand(command: AfterCommandArgs) {
     if (
       this.reporterOptions.screenshotStrategy!== 'none' &&
-      command.endpoint.includes('screenshot') &&
-      command.result &&
-      command.result.value &&
+      command?.endpoint?.includes('screenshot') &&
+      this.hasResultValue(command?.result) &&
       this.test
     ) {
       try {
@@ -81,7 +84,7 @@ class TimelineReporter extends WDIOReporter {
           this.reporterOptions.outputDir,
           `file-${Date.now()}.jpeg`
         );
-        var wstream = createWriteStream(filepath);
+        const wstream = createWriteStream(filepath);
         wstream.write(Buffer.from(command.result.value, 'base64'));
         wstream.end();
         this.test.screenshots.push(filepath);
@@ -106,9 +109,7 @@ class TimelineReporter extends WDIOReporter {
         let testSuite: TestSuite = {
           title: suite.title,
           duration: suite._duration,
-          //start: suite.start, todo
           start: suite.start.toDateString(),
-          //end: suite.end, todo
           end: suite.end.toDateString(),
           tests: MapTests(suite.tests),
           hooks: MapHooks(suite.hooks)
@@ -155,5 +156,3 @@ class TimelineReporter extends WDIOReporter {
     process.emit(event, msg);
   }
 }
-
-export default TimelineReporter;

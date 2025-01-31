@@ -1,8 +1,8 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import { Jimp } from 'jimp';
 import { parseISO, format } from 'date-fns';
 
-const retry = (promise, args, maxRetries = 3, interval = 500) =>
+const retry = (promise: (...args: unknown[]) => Promise<unknown>, args: unknown, maxRetries = 3, interval = 500) =>
   new Promise((resolve, reject) => {
     return promise(args)
       .then(resolve)
@@ -17,69 +17,35 @@ const retry = (promise, args, maxRetries = 3, interval = 500) =>
       });
   });
 
-const fileExists = (filename: string) => {
-  return new Promise((resolve, reject) => {
-    fs.exists(filename, exists => {
-      if (exists) {
-        resolve(filename);
-      }
-      reject();
-    });
-  });
-};
-
 const waitUntilFileExists = (filePath: string, timeout: number) => {
-  return retry(fileExists, filePath, Math.round(timeout / 1000));
+  return retry(fs.readFile, filePath, Math.round(timeout / 1000)) as Promise<string>;
 };
 
-const resizeImage = (
+const resizeImage = async (
   filePath: string,
   quality: number,
   reductionRatio: number
 ) => {
-  return Jimp.read(filePath)
-    .then(file => {
-      return file
-        .resize({
-          w: Math.round(file.width / reductionRatio),
-          h: Math.round(file.height / reductionRatio)
-        })
-        //.quality(quality) todo
-        //.writeAsync(filePath);
-        .write(`${filePath.split('.').splice(-1).concat('.')}.${filePath.split('.')[filePath.split('.').length - 1]}`);
-    })
-    .catch(err => {
-      throw err;
-    });
-};
-
-export const waitForFileExistsAndResize = (
-  filePath,
-  quality,
-  reductionRatio
-) => {
-  return waitUntilFileExists(filePath, 1500)
-    .then((file: string) => resizeImage(file, quality, reductionRatio))
-    .catch();
-};
-
-const isObject = item => {
-  return item && typeof item === 'object' && !Array.isArray(item);
-};
-
-export const deepMerge = (target: object, source: object) => {
-  let output = Object.assign({}, target);
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        if (!(key in target)) Object.assign(output, { [key]: source[key] });
-        else output[key] = deepMerge(target[key], source[key]);
-      } else {
-        Object.assign(output, { [key]: source[key] });
-      }
-    });
+  try {
+    const file = await Jimp.read(filePath);
+    return await file
+      .resize({
+        w: Math.round(file.width / reductionRatio),
+        h: Math.round(file.height / reductionRatio)
+      })
+      .write(`${filePath.split('.').splice(-1).concat('.')}.jpeg`, { quality });
+  } catch (err) {
+    throw err;
   }
-  return output;
+};
+
+export const waitForFileExistsAndResize = async (
+  filePath: string,
+  quality: number,
+  reductionRatio: number
+) => {
+  const file = await waitUntilFileExists(filePath, 1500);
+  return await resizeImage(file, quality, reductionRatio);
 };
 
 export const deepSearch = (searchTerm: string, obj: any, found = []) => {

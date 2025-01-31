@@ -14,6 +14,7 @@ import indexHtml from './index-template';
 import { waitForFileExistsAndResize, deepSearch } from './utils';
 import { promisify } from 'util';
 import { ReporterOptions } from './timeline-reporter';
+import type { Frameworks, Options, Capabilities } from '@wdio/types'
 
 const writeFilePromiseSync = promisify(writeFile);
 
@@ -21,11 +22,6 @@ const BEFORE_CLICK = 'before:click';
 const ON_ERROR = 'on:error';
 
 declare var browser: any;
-
-type WdioReporter = string | Array<any>;
-interface WdioConfiguration {
-  reporters: WdioReporter[];
-}
 
 export class TimelineService {
   public reporterOptions: ReporterOptions;
@@ -35,10 +31,9 @@ export class TimelineService {
   public stopTime: number;
   public watcher: FSWatcher;
 
-  setReporterOptions(config: WdioConfiguration) {
+  setReporterOptions(config: Options.Testrunner) {
     const timeline = config.reporters.find(
       item => Array.isArray(item) && item[0] === 'timeline'
-      //item => Array.isArray(item) && typeof item[0] !== 'string' todo
     );
     if (!timeline) {
       throw new Error(
@@ -67,7 +62,7 @@ export class TimelineService {
     this.resolvedOutputDir = resolve(this.reporterOptions.outputDir);
   }
 
-  onPrepare(config) {
+  onPrepare(config: Options.Testrunner, _capabilities: Capabilities.TestrunnerCapabilities) {
     this.startTime = Date.now();
     this.setReporterOptions(config);
 
@@ -96,25 +91,26 @@ export class TimelineService {
     }
   }
 
-  beforeSession(config) {
+  beforeSession(config: Omit<Options.Testrunner, 'capabilities'>,
+                _capabilities: Capabilities.RequestedStandaloneCapabilities | Capabilities.RequestedMultiremoteCapabilities,
+                _specs: string[],
+                _cid: string) {
     this.setReporterOptions(config);
   }
 
-  beforeCommand(commandName) {
+  beforeCommand(commandName: string, _params: unknown[]) {
     const { screenshotStrategy } = this.reporterOptions;
     if (screenshotStrategy === BEFORE_CLICK && 'click' === commandName) {
       browser.takeScreenshot();
     }
   }
 
-  //afterTest(test) { todo
-  afterTest(test, context, { error, result, duration, passed, retries }) {
+  afterTest(_test: Frameworks.Test, _context: unknown, result: Frameworks.TestResult) {
     const { screenshotStrategy } = this.reporterOptions;
     if (screenshotStrategy === BEFORE_CLICK) {
       browser.takeScreenshot();
     }
-    //if (screenshotStrategy === ON_ERROR && !test.passed) { todo
-    if (screenshotStrategy === ON_ERROR && !passed) {
+    if (screenshotStrategy === ON_ERROR && !result.passed) {
       browser.takeScreenshot();
     }
   }

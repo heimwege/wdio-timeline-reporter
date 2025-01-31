@@ -7,7 +7,7 @@ const SpecsResults = props => {
   const { specs } = props;
   return specs.map(spec => {
     return (
-      <div className="box" data-box-is="spec">
+      <div className="box" data-box-is="spec" key={spec.cid}>
         <h4 className="title is-4">
           <span className="has-text-grey-light">Spec:</span> {spec.filename}{' '}
         </h4>

@@ -1,4 +1,5 @@
 import { Error } from './mapTests';
+import { HookStats } from '@wdio/reporter';
 
 export interface Hook {
   name?: string;
@@ -11,7 +12,7 @@ export interface Hook {
   error?: Error;
 }
 
-export const MapHooks = suiteHooks => {
+export const MapHooks = (suiteHooks: HookStats[]) => {
   let hooks: Hook[] = [];
   for (let hookName of Object.keys(suiteHooks)) {
     const hook = suiteHooks[hookName];

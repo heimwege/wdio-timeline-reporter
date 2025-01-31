@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { TimelineService } from '../lib/timeline-service';
 import { join } from 'path';
+import type { Options } from '@wdio/types'
 
 describe('Create instance (service)', function() {
   it('should throw timeline not set as a reporter', function() {
@@ -18,7 +19,7 @@ describe('Create instance (service)', function() {
     const service = new TimelineService();
     const config = {
       reporters: ['one', ['timeline']]
-    };
+    } as Options.Testrunner;
     expect(() => service.setReporterOptions(config)).to.throw(
       Error,
       'Add reporter options object to timeline reporter: \n            reporters: [[timeline, {}]]\n        '
@@ -29,7 +30,7 @@ describe('Create instance (service)', function() {
     const service = new TimelineService();
     const config = {
       reporters: ['one', ['timeline', {}]]
-    };
+    } as Options.Testrunner;
     expect(() => service.setReporterOptions(config)).to.throw(
       Error,
       "Set outputDir on reporter options object: \n            reporters: [[timeline, {\n              outputDir: 'desired_folder'\n            }]]\n        "
@@ -40,7 +41,7 @@ describe('Create instance (service)', function() {
     const service = new TimelineService();
     const config = {
       reporters: ['one', ['timeline', { outputDir: 'someDirectory' }]]
-    };
+    } as Options.Testrunner;
     expect(() => service.setReporterOptions(config)).to.not.throw();
     expect(service.reporterOptions).deep.equals({ outputDir: 'someDirectory' });
     expect(service.resolvedOutputDir).deep.equals(

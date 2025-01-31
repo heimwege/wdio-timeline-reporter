@@ -8,7 +8,7 @@ const SuitesResults = props => {
     const id = makeId(item.title);
 
     return (
-      <div className="box suites-results" data-box-is="suite">
+      <div className="box suites-results" data-box-is="suite" key={id}>
         <LinkableHeaderH4 styleName={'subtitle'} level={4} id={id}>
           {item.title}
         </LinkableHeaderH4>

@@ -1,3 +1,5 @@
+//import { Workers } from '@wdio/types';
+
 export interface State {
   passed: number;
   failed: number;
@@ -20,7 +22,7 @@ export interface ResultSet {
   state?: State;
 }
 
-export const initResultSet = (runner: any) => {
+export const initResultSet = runner => {
   let resultSet: ResultSet = {};
 
   resultSet.start = runner.start;
